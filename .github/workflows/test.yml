@@ -1,0 +1,38 @@
+name: Test Action
+on:
+  push:
+    branches: [master]
+  pull_request:
+    branches: [master]
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+
+      - name: Install dependencies
+        run: npm install
+
+      - name: Create test output
+        run: |
+          echo "running 2 tests
+          test example::test_success ... ok
+          test example::test_failure ... FAILED
+
+          failures:
+
+          ---- example::test_failure stdout ----
+          thread 'example::test_failure' panicked at 'assertion failed'
+
+          test result: FAILED. 1 passed; 1 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.01s" > result.txt
+
+      - name: Test action
+        uses: ./
+        with:
+          results-file: result.txt
