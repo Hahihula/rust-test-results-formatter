@@ -1,6 +1,6 @@
 # Rust Test Results Formatter
 
-A GitHub Action that formats Rust test output into a pretty and informative GitHub Actions Job Summary.
+A GitHub Action that formats Rust test output into a pretty and informative GitHub Actions Job Summary. Does not need the nightly Rust toolchain.
 
 ## Usage
 
