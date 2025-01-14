@@ -10,6 +10,7 @@ steps:
 
   - name: Run tests
     run: cargo test > result.txt
+    continue-on-error: true
 
   - name: Format test results
     uses: hahihula/rust-test-results-formatter@v1
