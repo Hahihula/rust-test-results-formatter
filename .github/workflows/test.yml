@@ -19,7 +19,21 @@ jobs:
       - name: Install dependencies
         run: npm install
 
-      - name: Create test output
+      - name: Test successful case
+        run: |
+          echo "running 2 tests
+          test example::test_one ... ok
+          test example::test_two ... ok
+
+          test result: ok. 2 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.01s" > success.txt
+
+      - name: Test action with success
+        uses: ./
+        with:
+          results-file: success.txt
+        continue-on-error: true
+
+      - name: Test failed case
         run: |
           echo "running 2 tests
           test example::test_success ... ok
@@ -30,9 +44,35 @@ jobs:
           ---- example::test_failure stdout ----
           thread 'example::test_failure' panicked at 'assertion failed'
 
-          test result: FAILED. 1 passed; 1 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.01s" > result.txt
+          test result: FAILED. 1 passed; 1 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.01s" > failed.txt
 
-      - name: Test action
+      - name: Test action with failures
         uses: ./
         with:
-          results-file: result.txt
+          results-file: failed.txt
+        continue-on-error: true
+
+      - name: Test build error case
+        run: |
+          echo "   Compiling example v0.1.0
+          error[E0433]: failed to resolve: use of undeclared crate or module 'missing'
+            --> src/main.rs:1:5
+             |
+          1  | use missing::something;
+             |     ^^^^^^^ use of undeclared crate or module 'missing'
+
+          warning: unused import: 'std::io::Write'
+            --> src/main.rs:2:5
+             |
+          2  | use std::io::Write;
+             |     ^^^^^^^^^^^^^
+             |
+             = note: '#[warn(unused_imports)]' on by default
+
+          error: could not compile 'example' due to previous error; 1 warning emitted" > build_error.txt
+
+      - name: Test action with build errors
+        uses: ./
+        with:
+          results-file: build_error.txt
+        continue-on-error: true
