@@ -75,4 +75,3 @@ jobs:
         uses: ./
         with:
           results-file: build_error.txt
-        continue-on-error: true
