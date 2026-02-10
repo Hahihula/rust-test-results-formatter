@@ -199,6 +199,7 @@ async function run() {
 
     // Handle missing results file (e.g. test step failed before writing output)
     if (!fs.existsSync(resultsFile)) {
+      core.warning("Results file not found; job summary updated. The test step may have failed before writing output.");
       const markdown = "# Test Results ⚠️\n\nResults file not found. The test step may have failed before writing output (e.g. compile error or crash).\n";
       await core.summary.addRaw(markdown).write();
       return;
