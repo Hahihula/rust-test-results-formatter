@@ -133,10 +133,12 @@ function generateMarkdown(results) {
 
   // Only add test results if there was no build error
   if (buildIssues.errors.length === 0) {
-    const statusEmoji = summary ? (summary.failed > 0 ? "❌" : "✅") : "⚠️";
+    // Guard all summary access: summary may be null when no "test result: ..." line (e.g. compile error, truncated output)
+    const failedCount = summary != null ? summary.failed : 0;
+    const statusEmoji = summary == null ? "⚠️" : (failedCount > 0 ? "❌" : "✅");
     md += `# Test Results ${statusEmoji}\n\n`;
 
-    if (summary) {
+    if (summary != null) {
       md += "## Summary\n\n";
       md += `- **Status**: ${summary.status}\n`;
       md += `- **Duration**: ${summary.duration}\n`;
@@ -182,6 +184,8 @@ function generateMarkdown(results) {
           md += "\n```\n\n";
         });
       }
+    } else {
+      md += "No test summary line found in the results file (e.g. output may be from a compile error, crash, or truncated run).\n";
     }
   }
 
@@ -193,6 +197,14 @@ async function run() {
     // Get inputs
     const resultsFile = core.getInput("results-file");
 
+    // Handle missing results file (e.g. test step failed before writing output)
+    if (!fs.existsSync(resultsFile)) {
+      core.warning("Results file not found; job summary updated. The test step may have failed before writing output.");
+      const markdown = "# Test Results ⚠️\n\nResults file not found. The test step may have failed before writing output (e.g. compile error or crash).\n";
+      await core.summary.addRaw(markdown).write();
+      return;
+    }
+
     // Read the test results file
     const content = fs.readFileSync(resultsFile, "utf8");
 
@@ -203,10 +215,10 @@ async function run() {
     // Write to job summary
     await core.summary.addRaw(markdown).write();
 
-    // Set action status based on build errors or test failures
+    // Set action status based on build errors or test failures (guard null summary)
     if (results.buildIssues.errors.length > 0) {
       core.setFailed("Build failed with errors");
-    } else if (results.summary && results.summary.failed > 0) {
+    } else if (results.summary != null && results.summary.failed > 0) {
       core.setFailed("Tests failed");
     }
   } catch (error) {
